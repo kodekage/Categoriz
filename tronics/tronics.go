@@ -1,5 +1,0 @@
-package tronics
-
-func Start() {
-
-}

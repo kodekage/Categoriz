@@ -1,4 +1,4 @@
-module goweb
+module github.com/kodekage/categoriz
 
 go 1.16
 
