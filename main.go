@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/kodekage/categoriz/db"
 	"github.com/labstack/echo"
 	"net/http"
 	"os"
@@ -10,6 +11,8 @@ func main() {
 	server := echo.New()
 	port := os.Getenv("APP_PORT")
 
+	//server.HTTPErrorHandler = customHttpErrorHandler
+
 	server.GET("/categories", getCategories)
 	server.GET("/categories/:id", getCategoryById)
 	server.POST("/categories", createCategory)
@@ -18,40 +21,28 @@ func main() {
 }
 
 func getCategories(context echo.Context) error {
-	categories := DB()
-
-	return context.JSON(http.StatusOK, categories)
+	return context.JSON(http.StatusOK, db.FindAll())
 }
 
 func getCategoryById(context echo.Context) error {
-	// TODO: migrate to SQL DB
-	categories := DB()
 	id := context.Param("id")
-	var result Category
+	category, err := db.Find(id)
 
-	for _, category := range categories {
-		if category.Id.String() == id {
-			result = category
-		}
+	if err != nil {
+		return newHTTPError(http.StatusNotFound, "NotFound", err.Error())
 	}
 
-	if (result == Category{}) {
-		return context.JSON(http.StatusBadRequest, "Category not found")
-	}
-
-	return context.JSON(http.StatusOK, result)
+	return context.JSON(http.StatusOK, category)
 }
 
 func createCategory(context echo.Context) error {
-	db := DB()
-
-	var reqestBody Category
+	var reqestBody db.Category
 
 	if err := context.Bind(&reqestBody); err != nil {
 		return err
 	}
 
-	db = append(db, reqestBody)
+	result := db.Add(reqestBody)
 
-	return context.JSON(http.StatusOK, db)
+	return context.JSON(http.StatusOK, result)
 }
