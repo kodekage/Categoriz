@@ -11,7 +11,7 @@ func main() {
 	server := echo.New()
 	port := os.Getenv("APP_PORT")
 
-	//server.HTTPErrorHandler = customHttpErrorHandler
+	server.HTTPErrorHandler = customHttpErrorHandler
 
 	server.GET("/categories", getCategories)
 	server.GET("/categories/:id", getCategoryById)

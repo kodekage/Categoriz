@@ -5,21 +5,21 @@ import (
 	"net/http"
 )
 
-type httpError struct {
-	code    int
+type HttpError struct {
+	Code    int    `json:"code"`
 	Key     string `json:"error"`
 	Message string `json:"message"`
 }
 
-func newHTTPError(code int, key string, message string) *httpError {
-	return &httpError{
-		code:    code,
+func newHTTPError(code int, key string, message string) *HttpError {
+	return &HttpError{
+		Code:    code,
 		Key:     key,
 		Message: message,
 	}
 }
 
-func (e *httpError) Error() string {
+func (e *HttpError) Error() string {
 	return e.Key + ": " + e.Message
 }
 
@@ -30,28 +30,14 @@ func customHttpErrorHandler(err error, c echo.Context) {
 		message string
 	)
 
-	if he, ok := err.(*httpError); ok {
-		code = he.code
+	if he, ok := err.(*HttpError); ok {
+		code = he.Code
 		key = he.Key
 		message = he.Message
 	} else {
 		message = http.StatusText(code)
 	}
 
-	if c.Response().Committed {
-		if c.Request().Method == echo.HEAD {
-			err := c.NoContent(code)
-			if err != nil {
-				c.Logger().Error(err)
-			}
-			//} else if config.Debug {
-			//	message = err.Error()
-		} else {
-			err := c.JSON(code, newHTTPError(code, key, message))
-
-			if err != nil {
-				c.Logger().Error(err)
-			}
-		}
-	}
+	err = c.JSON(code, newHTTPError(code, key, message))
+	c.Logger().Error(err)
 }
