@@ -55,12 +55,12 @@ func Add(category Category) []Category {
 	return categories
 }
 
-func Find(id string) (error, Category) {
+func FindByIdOrSlug(identifier string) (error, Category) {
 	var result Category
 	var err error = nil
 
 	for _, category := range categories {
-		if id == category.Id.String() {
+		if identifier == category.Id.String() || identifier == category.Slug {
 			result = category
 		}
 	}
@@ -91,12 +91,12 @@ func FindIndex(id string) (error, int) {
 	return err, index
 }
 
-func UpdateById(id string, category Category) (Category, error) {
+func UpdateById(id string, category Category) (error, Category) {
 	var err error = nil
 	resultErr, index := FindIndex(id)
 
 	if resultErr != nil {
-		err = resultErr
+		return resultErr, Category{}
 	}
 
 	categories[index].Name = category.Name
@@ -104,5 +104,20 @@ func UpdateById(id string, category Category) (Category, error) {
 	categories[index].Slug = category.Slug
 	categories[index].ParentCategory = category.ParentCategory
 
-	return categories[index], err
+	return err, categories[index]
+}
+
+func Delete(id string) (error, []Category) {
+	var error error
+	err, index := FindIndex(id)
+
+	if err != nil {
+		error = err
+
+		return error, nil
+	}
+
+	categories = append(categories[:index], categories[index+1:]...)
+
+	return error, categories
 }
