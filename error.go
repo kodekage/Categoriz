@@ -5,21 +5,21 @@ import (
 	"net/http"
 )
 
-type HttpError struct {
+type httpError struct {
 	Code    int    `json:"code"`
 	Key     string `json:"error"`
 	Message string `json:"message"`
 }
 
-func newHTTPError(code int, key string, message string) *HttpError {
-	return &HttpError{
+func newHTTPError(code int, key string, message string) *httpError {
+	return &httpError{
 		Code:    code,
 		Key:     key,
 		Message: message,
 	}
 }
 
-func (e *HttpError) Error() string {
+func (e *httpError) Error() string {
 	return e.Key + ": " + e.Message
 }
 
@@ -30,7 +30,7 @@ func customHttpErrorHandler(err error, c echo.Context) {
 		message string
 	)
 
-	if he, ok := err.(*HttpError); ok {
+	if he, ok := err.(*httpError); ok {
 		code = he.Code
 		key = he.Key
 		message = he.Message
@@ -39,5 +39,5 @@ func customHttpErrorHandler(err error, c echo.Context) {
 	}
 
 	err = c.JSON(code, newHTTPError(code, key, message))
-	c.Logger().Error(err)
+	c.Logger().Error(message)
 }

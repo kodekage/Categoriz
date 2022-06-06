@@ -6,18 +6,18 @@ import (
 )
 
 type Category struct {
-	Id             uuid.UUID `json:"id"`
-	Name           string    `json:"name"`
-	Slug           string    `json:"slug"`
-	ParentCategory *Category `json:"parentCategory"`
-	isVisible      bool      `json:"isVisible"`
+	Id             uuid.UUID `json:"id,omitempty"`
+	Name           string    `json:"name,omitempty" validate:"required,min=4"`
+	Slug           string    `json:"slug,omitempty" validate:"required_with=Name"`
+	ParentCategory uuid.UUID `json:"parentCategory,omitempty" validate:"required"`
+	IsVisible      bool      `json:"isVisible,omitempty"`
 }
 
 var perfumes = Category{
 	Id:        uuid.NewV4(),
 	Name:      "Perfumes",
-	Slug:      "perfume",
-	isVisible: true,
+	Slug:      "perfumes",
+	IsVisible: true,
 }
 
 var categories = []Category{
@@ -25,15 +25,15 @@ var categories = []Category{
 		Id:             uuid.FromStringOrNil("b2440ddc-910d-4ab5-b0dc-b01f3258eddc"),
 		Name:           "Mild Perfumes",
 		Slug:           "mild-perfumes",
-		ParentCategory: &perfumes,
-		isVisible:      true,
+		ParentCategory: perfumes.Id,
+		IsVisible:      true,
 	},
 	{
 		Id:             uuid.FromStringOrNil("ed9b1c64-40e4-45a0-9a5f-8633b117e331"),
 		Name:           "Strong Perfumes",
 		Slug:           "strong-perfumes",
-		ParentCategory: &perfumes,
-		isVisible:      true,
+		ParentCategory: perfumes.Id,
+		IsVisible:      true,
 	},
 }
 
@@ -46,7 +46,7 @@ func Add(category Category) []Category {
 		Id:             uuid.NewV4(),
 		Name:           category.Name,
 		Slug:           category.Slug,
-		isVisible:      category.isVisible,
+		IsVisible:      category.IsVisible,
 		ParentCategory: category.ParentCategory,
 	}
 
@@ -55,9 +55,9 @@ func Add(category Category) []Category {
 	return categories
 }
 
-func Find(id string) (Category, error) {
+func Find(id string) (error, Category) {
 	var result Category
-	var error error = nil
+	var err error = nil
 
 	for _, category := range categories {
 		if id == category.Id.String() {
@@ -66,8 +66,43 @@ func Find(id string) (Category, error) {
 	}
 
 	if (result == Category{}) {
-		error = errors.New("Category not found")
+		err = errors.New("category not found")
 	}
 
-	return result, error
+	return err, result
+}
+
+func FindIndex(id string) (error, int) {
+	var index int
+	var result Category
+	var err error = nil
+
+	for i, category := range categories {
+		if id == category.Id.String() {
+			index = i
+			result = category
+		}
+	}
+
+	if (result == Category{}) {
+		err = errors.New("category not found")
+	}
+
+	return err, index
+}
+
+func UpdateById(id string, category Category) (Category, error) {
+	var err error = nil
+	resultErr, index := FindIndex(id)
+
+	if resultErr != nil {
+		err = resultErr
+	}
+
+	categories[index].Name = category.Name
+	categories[index].IsVisible = category.IsVisible
+	categories[index].Slug = category.Slug
+	categories[index].ParentCategory = category.ParentCategory
+
+	return categories[index], err
 }
